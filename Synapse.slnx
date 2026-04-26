@@ -3,8 +3,8 @@
     <File Path=".editorconfig" />
   </Folder>
   <Folder Name="/VSIX/">
-    <Project Path="Synapse.LSP.Client/Synapse.LSP.Client.csproj" Id="d7cb747e-0313-431a-b711-9c6aac9062f8" />
-    <Project Path="Synapse.VisualStudio/Synapse.VisualStudio.csproj" Id="48190bf4-a331-4e98-a25b-bcbc2b41861e">
+    <Project Path="VSIX/Synapse.LSP.Client/Synapse.LSP.Client.csproj" Id="d7cb747e-0313-431a-b711-9c6aac9062f8" />
+    <Project Path="VSIX/Synapse.VisualStudio/Synapse.VisualStudio.csproj" Id="48190bf4-a331-4e98-a25b-bcbc2b41861e">
       <Deploy />
     </Project>
   </Folder>
