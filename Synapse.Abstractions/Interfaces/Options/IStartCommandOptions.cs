@@ -8,5 +8,5 @@ public interface IStartCommandOptions
    /// <summary>
    /// Gets the name or path of the Named Pipe used for Inter-Process Communication (IPC).
    /// </summary>
-   string Pipe { get; }
+   string PipeName { get; }
 }

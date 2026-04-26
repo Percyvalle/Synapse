@@ -3,7 +3,7 @@
 /// <summary>
 /// Represents the configuration parameters required to initialize and run the LSP server.
 /// </summary>
-public class LanguageServerOptions
+public class LanguageServerConfiguration
 {
    /// <summary>
    /// Gets the name of the Named Pipe that the server will use

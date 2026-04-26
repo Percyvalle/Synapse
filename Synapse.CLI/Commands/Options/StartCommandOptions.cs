@@ -13,5 +13,5 @@ internal class StartCommandOptions : IStartCommandOptions
    /// <inheritdoc/>
    [Option("--pipe")]
    [Description("The name of the named pipe used for Inter-Process Communication (IPC).")]
-   public string Pipe { get; set; } = "default";
+   public string PipeName { get; set; } = "default";
 }

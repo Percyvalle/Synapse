@@ -5,6 +5,7 @@ using Synapse.CLI.Abstractions.Interfaces;
 using Synapse.CLI.Commands.Options;
 using Synapse.Common.Constants;
 using Synapse.LSP.Abstractions.Interfaces;
+using Synapse.LSP.Abstractions.Models;
 using Synapse.LSP.Entities;
 
 namespace Synapse.CLI.Commands;
@@ -22,16 +23,21 @@ internal class StartCommand : IExecutableCommand<StartCommandOptions>
    /// <inheritdoc/>
    public async Task<int> ExecuteAsync(StartCommandOptions options, CancellationToken token = default)
    {
-      Logger.Information("Starting LSP server on pipe: {PipeName}", options.Pipe);
+      Logger.Information("Initializing Synapse LSP server instance on pipe: {PipeName}", options.PipeName);
 
       try
       {
-         ILanguageServer server = new LanguageServerHost();
+         var configuration = new LanguageServerConfiguration
+         {
+            PipeName = options.PipeName,
+         };
+
+         ILanguageServer server = new LanguageServerHost(configuration);
          return await server.RunAsync(token);
       }
       catch (Exception exception)
       {
-         Logger.Error(exception, "Failed to start LSP server on pipe {PipeName}", options.Pipe);
+         Logger.Fatal(exception, "Critical failure during Synapse LSP startup on pipe {PipeName}", options.PipeName);
          return ExitCodes.Failure;
       }
    }

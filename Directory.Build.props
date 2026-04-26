@@ -5,7 +5,10 @@
       <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
       
       <AnalysisLevel>latest</AnalysisLevel>
-      <Nullable>enable</Nullable>
+
+      <BaseArtifactsPath>$(MSBuildThisFileDirectory)bin</BaseArtifactsPath>
+      <OutputPath>$(BaseArtifactsPath)\$(Platform)\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
+      <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
    </PropertyGroup>
 
    <ItemGroup>

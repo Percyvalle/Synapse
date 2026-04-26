@@ -20,7 +20,7 @@
     <ProjectReference Include="..\Synapse.Abstractions\Synapse.CLI.Abstractions.csproj" />
     <ProjectReference Include="..\Synapse.Common\Synapse.Common.csproj" />
     <ProjectReference Include="..\Synapse.LSP.Abstractions\Synapse.LSP.Abstractions.csproj" />
-    <ProjectReference Include="..\Synapse.LSP\Synapse.LSP.csproj" />
+    <ProjectReference Include="..\Synapse.LSP\Synapse.LSP.Server.csproj" />
   </ItemGroup>
 
 </Project>

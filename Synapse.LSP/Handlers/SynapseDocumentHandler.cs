@@ -4,17 +4,16 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Client.Capabilities;
 using OmniSharp.Extensions.LanguageServer.Protocol.Document;
 using OmniSharp.Extensions.LanguageServer.Protocol.Models;
 using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
+using Synapse.LSP.Abstractions;
 
 namespace Synapse.LSP.Handlers;
 
 internal class SynapseDocumentHandler : ITextDocumentSyncHandler
 {
-   private const string TypeDocumentSelector = "csharp";
-
    /// <inheritdoc/>
    public TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri)
    {
-      return new TextDocumentAttributes(uri, TypeDocumentSelector);
+      return new TextDocumentAttributes(uri, LanguageConstants.Selector);
    }
 
    /// <inheritdoc/>
@@ -46,8 +45,8 @@ internal class SynapseDocumentHandler : ITextDocumentSyncHandler
    {
       return new TextDocumentChangeRegistrationOptions
       {
-         DocumentSelector = TextDocumentSelector.ForLanguage(TypeDocumentSelector),
-         SyncKind = TextDocumentSyncKind.Full, // TODO: Convert to incremental interaction
+         DocumentSelector = LanguageConstants.Selector,
+         SyncKind = TextDocumentSyncKind.Incremental,
       };
    }
 
@@ -56,7 +55,7 @@ internal class SynapseDocumentHandler : ITextDocumentSyncHandler
    {
       return new TextDocumentOpenRegistrationOptions
       {
-         DocumentSelector = TextDocumentSelector.ForLanguage(TypeDocumentSelector),
+         DocumentSelector = LanguageConstants.Selector,
       };
    }
 
@@ -65,7 +64,7 @@ internal class SynapseDocumentHandler : ITextDocumentSyncHandler
    {
       return new TextDocumentCloseRegistrationOptions
       {
-         DocumentSelector = TextDocumentSelector.ForLanguage(TypeDocumentSelector),
+         DocumentSelector = LanguageConstants.Selector,
       };
    }
 
@@ -75,7 +74,7 @@ internal class SynapseDocumentHandler : ITextDocumentSyncHandler
       return new TextDocumentSaveRegistrationOptions
       {
          IncludeText = true,
-         DocumentSelector = TextDocumentSelector.ForLanguage(TypeDocumentSelector),
+         DocumentSelector = LanguageConstants.Selector,
       };
    }
 }
