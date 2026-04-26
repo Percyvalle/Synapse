@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Synapse Start": {
+      "commandName": "Project",
+      "commandLineArgs": "start --pipe=inner"
+    },
+    "Synapse Help": {
+      "commandName": "Project",
+      "commandLineArgs": "--help"
+    },
+    "Synapse Vers": {
+      "commandName": "Project",
+      "commandLineArgs": "--version"
+    }
+  }
+}

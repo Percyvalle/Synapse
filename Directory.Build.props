@@ -1,0 +1,21 @@
+<Project>
+   <PropertyGroup>
+      <GenerateDocumentationFile>true</GenerateDocumentationFile>
+      <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+      <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+      
+      <AnalysisLevel>latest</AnalysisLevel>
+      <Nullable>enable</Nullable>
+   </PropertyGroup>
+
+   <ItemGroup>
+      <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
+         <PrivateAssets>all</PrivateAssets>
+         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Roslynator.Analyzers" Version="4.15.0">
+         <PrivateAssets>all</PrivateAssets>
+         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+   </ItemGroup>
+</Project>
