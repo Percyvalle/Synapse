@@ -10,10 +10,18 @@ using ILogger = Serilog.ILogger;
 
 namespace Synapse.LSP.Entities;
 
+/// <summary>
+/// Orchestrates the Language Server Protocol (LSP) lifecycle and request handling.
+/// </summary>
 public class LanguageServerHost : ILanguageServer
 {
    private readonly LanguageServerConfiguration _configuration;
 
+   /// <summary>
+   /// Initializes a new instance of the <see cref="LanguageServerHost"/> class.
+   /// </summary>
+   /// <param name="configuration">The configuration settings used to initialize the server.</param>
+   /// <exception cref="ArgumentNullException">Thrown when <paramref name="configuration"/> is null.</exception>
    public LanguageServerHost(LanguageServerConfiguration configuration)
    {
       _configuration = configuration;

@@ -19,25 +19,25 @@ internal class SynapseDocumentHandler : ITextDocumentSyncHandler
    /// <inheritdoc/>
    public Task<Unit> Handle(DidChangeTextDocumentParams request, CancellationToken cancellationToken)
    {
-      throw new NotImplementedException();
+      return Task.FromResult(Unit.Value);
    }
 
    /// <inheritdoc/>
    public Task<Unit> Handle(DidOpenTextDocumentParams request, CancellationToken cancellationToken)
    {
-      throw new NotImplementedException();
+      return Task.FromResult(Unit.Value);
    }
 
    /// <inheritdoc/>
    public Task<Unit> Handle(DidCloseTextDocumentParams request, CancellationToken cancellationToken)
    {
-      throw new NotImplementedException();
+      return Task.FromResult(Unit.Value);
    }
 
    /// <inheritdoc/>
    public Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken)
    {
-      throw new NotImplementedException();
+      return Task.FromResult(Unit.Value);
    }
 
    /// <inheritdoc/>

@@ -17,10 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Synapse.Abstractions\Synapse.CLI.Abstractions.csproj" />
+    <ProjectReference Include="..\Synapse.CLI.Abstractions\Synapse.CLI.Abstractions.csproj" />
     <ProjectReference Include="..\Synapse.Common\Synapse.Common.csproj" />
     <ProjectReference Include="..\Synapse.LSP.Abstractions\Synapse.LSP.Abstractions.csproj" />
-    <ProjectReference Include="..\Synapse.LSP\Synapse.LSP.Server.csproj" />
+    <ProjectReference Include="..\Synapse.LSP.Server\Synapse.LSP.Server.csproj" />
   </ItemGroup>
 
 </Project>

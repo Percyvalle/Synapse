@@ -7,6 +7,13 @@ using Microsoft.VisualStudio.Shell;
 namespace Synapse.VisualStudio;
 
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
+[ProvideAutoLoad(SynapseStudioPackage.PackageGuidString, PackageAutoLoadFlags.BackgroundLoad)]
+[ProvideUIContextRule(
+    SynapseStudioPackage.PackageGuidString,
+    name: "Auto Load For CSharp",
+    expression: "CSharp",
+    termNames: ["CSharp"],
+    termValues: ["SolutionHasProjectCapability:CSharp"])]
 [Guid(SynapseStudioPackage.PackageGuidString)]
 public sealed class SynapseStudioPackage : AsyncPackage
 {

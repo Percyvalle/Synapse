@@ -23,4 +23,13 @@
   <ItemGroup>
     <ProjectReference Include="..\Synapse.LSP.Client\Synapse.LSP.Client.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(SolutionDir)bin\AnyCPU\$(Configuration)\Synapse.CLI\net10.0\**\*.*">
+      <Link>Host\%(RecursiveDir)%(FileName)%(Extension)</Link>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
 </Project>
