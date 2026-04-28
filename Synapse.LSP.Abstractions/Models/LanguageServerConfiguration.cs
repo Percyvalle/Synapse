@@ -10,4 +10,10 @@ public class LanguageServerConfiguration
    /// for listening to incoming JSON-RPC messages.
    /// </summary>
    public string PipeName { get; init; } = string.Empty;
+
+   /// <summary>
+   /// Gets the absolute or relative path to the directory where
+   /// the server's diagnostic log files will be stored.
+   /// </summary>
+   public string LogDirectory { get; init; } = string.Empty;
 }

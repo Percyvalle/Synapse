@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.LanguageServer.Client;
 using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
+using Synapse.LSP.Client.Interfaces;
 
 namespace Synapse.LSP.Client.Entities;
 
@@ -20,11 +17,19 @@ namespace Synapse.LSP.Client.Entities;
 [Export(typeof(ILanguageClient))]
 public class LanguageClientHost : ILanguageClient
 {
-   /// <inheritdoc/>
-   public event AsyncEventHandler<EventArgs> StartAsync;
+   /// <summary>
+   /// Initializes a new instance of the <see cref="LanguageClientHost"/> class.
+   /// </summary>
+   public LanguageClientHost()
+   {
+      StopAsync += OnStopAsync;
+   }
 
    /// <inheritdoc/>
-   public event AsyncEventHandler<EventArgs> StopAsync;
+   public event AsyncEventHandler<EventArgs>? StartAsync;
+
+   /// <inheritdoc/>
+   public event AsyncEventHandler<EventArgs>? StopAsync;
 
    /// <inheritdoc/>
    public string Name => "Synapse";
@@ -47,45 +52,29 @@ public class LanguageClientHost : ILanguageClient
    /// <inheritdoc/>
    public bool ShowNotificationOnInitializeFailed => true;
 
+   [Import]
+   private ILanguageServerLauncher Launcher { get; set; } = null!;
+
    /// <inheritdoc/>
-   public async Task<Connection> ActivateAsync(CancellationToken token)
+   public async Task<Connection?> ActivateAsync(CancellationToken token)
    {
-      var pipe = $"synapse-{Guid.NewGuid()}";
-      var stream = new NamedPipeClientStream(".", pipe, PipeDirection.InOut, PipeOptions.Asynchronous);
-
-      var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-      var worked = Path.Combine(path, "Host");
-      var server = Path.Combine(worked, "Synapse.CLI.exe");
-
-      if (!File.Exists(server))
+      try
       {
-         throw new FileNotFoundException($"LSP Server not found at: {server}");
+         return await Launcher.ActivateAsync(token);
       }
-
-      ProcessStartInfo info = new ProcessStartInfo
+      catch
       {
-         FileName = server,
-         Arguments = $"start --pipe={pipe}",
-         WorkingDirectory = worked,
-         UseShellExecute = false,
-         CreateNoWindow = false,
-      };
-
-      Process process = new Process { StartInfo = info };
-
-      if (process.Start())
-      {
-         await stream.ConnectAsync(token);
-         return new Connection(stream, stream);
+         // TODO: Logging the error and forwarding it further for recording in the Visual Studio Log
+         return null;
       }
-
-      return null;
    }
 
    /// <inheritdoc/>
    public async Task OnLoadedAsync()
    {
-      await StartAsync.InvokeAsync(this, EventArgs.Empty);
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+      await StartAsync?.InvokeAsync(this, EventArgs.Empty);
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
    }
 
    /// <inheritdoc/>
@@ -103,5 +92,15 @@ public class LanguageClientHost : ILanguageClient
       };
 
       return Task.FromResult(context);
+   }
+
+   private async Task OnStopAsync(object? sender, EventArgs args)
+   {
+      StopAsync -= OnStopAsync;
+
+      if (Launcher != null)
+      {
+         await Launcher.DisposeAsync();
+      }
    }
 }

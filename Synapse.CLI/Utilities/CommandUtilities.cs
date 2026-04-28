@@ -35,8 +35,8 @@ internal static class CommandUtilities
       if (option != null)
       {
          var method = typeof(CommandUtilities)
-            .GetMethod(nameof(BindCommandHandler), BindingFlags.NonPublic | BindingFlags.Static)!
-            .MakeGenericMethod(option);
+            .GetMethod(nameof(BindCommandHandler), BindingFlags.NonPublic | BindingFlags.Static)
+            !.MakeGenericMethod(option);
 
          method.Invoke(null, [instance, command]);
       }

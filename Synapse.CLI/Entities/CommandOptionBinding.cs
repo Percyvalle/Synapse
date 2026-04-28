@@ -38,8 +38,8 @@ internal class CommandOptionBinding<TOptions>
       foreach (var (property, option) in _options)
       {
          var method = typeof(CommandOptionBinding<TOptions>)
-            .GetMethod(nameof(GetOptionValue), BindingFlags.NonPublic | BindingFlags.Instance)!
-            .MakeGenericMethod(property.PropertyType);
+            .GetMethod(nameof(GetOptionValue), BindingFlags.NonPublic | BindingFlags.Instance)
+            !.MakeGenericMethod(property.PropertyType);
 
          var value = method.Invoke(this, [result, option]);
          property.SetValue(options, value, null);

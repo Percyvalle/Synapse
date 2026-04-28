@@ -11,7 +11,7 @@ using Synapse.LSP.Entities;
 namespace Synapse.CLI.Commands;
 
 /// <summary>
-/// Provides the execution logic for the "start" command, 
+/// Provides the execution logic for the "start" command,
 /// responsible for initializing and running the LSP server instance.
 /// </summary>
 [Command("start")]
