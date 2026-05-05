@@ -3,7 +3,7 @@
 /// <summary>
 /// Defines the core contract for managing the lifecycle of the Synapse Language Server.
 /// </summary>
-public interface ILanguageServer : IAsyncDisposable
+public interface ILanguageServer
 {
    /// <summary>
    /// Starts the main message processing loop of the server.

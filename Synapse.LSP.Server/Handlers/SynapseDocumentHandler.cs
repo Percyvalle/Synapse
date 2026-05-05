@@ -8,6 +8,9 @@ using Synapse.LSP.Abstractions;
 
 namespace Synapse.LSP.Handlers;
 
+/// <summary>
+/// Handles text document synchronization events between the IDE and the language server.
+/// </summary>
 internal class SynapseDocumentHandler : ITextDocumentSyncHandler
 {
    /// <inheritdoc/>

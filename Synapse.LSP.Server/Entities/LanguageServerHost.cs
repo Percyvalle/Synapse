@@ -6,6 +6,7 @@ using Synapse.Common.Constants;
 using Synapse.LSP.Abstractions.Interfaces;
 using Synapse.LSP.Abstractions.Models;
 using Synapse.LSP.Handlers;
+using Synapse.LSP.Server.Handlers;
 using ILogger = Serilog.ILogger;
 
 namespace Synapse.LSP.Entities;
@@ -15,6 +16,10 @@ namespace Synapse.LSP.Entities;
 /// </summary>
 public class LanguageServerHost : ILanguageServer
 {
+   private static readonly TimeSpan DefaultMonitorIntervalInternal = TimeSpan.FromSeconds(1);
+
+   private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+
    private readonly LanguageServerConfiguration _configuration;
 
    /// <summary>
@@ -32,11 +37,12 @@ public class LanguageServerHost : ILanguageServer
    /// <inheritdoc/>
    public async Task<int> RunAsync(CancellationToken token = default)
    {
-      var pipe = new NamedPipeServerStream(_configuration.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+      using var pipe = new NamedPipeServerStream(_configuration.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
-      Logger.Information("Waiting for client connection on named pipe: {PipeName}...", _configuration.PipeName);
+      Logger.Information("Listening for transport connection: {PipeName}", _configuration.PipeName);
       await pipe.WaitForConnectionAsync();
-      Logger.Information("Client connected to pipe. Building Language Server...");
+
+      Logger.Information("Transport connection established. Initializing Language Server...");
 
       var server = await LanguageServer.From(options =>
          options
@@ -47,18 +53,33 @@ public class LanguageServerHost : ILanguageServer
                   .AddSerilog()
                   .AddLanguageProtocolLogging()
                   .SetMinimumLevel(LogLevel.Debug))
-            .WithHandler<SynapseDocumentHandler>())
+            .WithHandler<SynapseDocumentHandler>()
+            .WithHandler<SynapseShutdownHandler>())
          .ConfigureAwait(false);
 
-      Logger.Information("LSP Server initialized and running.");
+      // NOTE: We initiate background monitoring of the pipe connection to ensure 
+      // the server self-terminates if the host process (IDE) closes unexpectedly 
+      // without sending a formal 'shutdown' request.
+      _ = Task.Run(() => MonitorPipeConnectionInternalAsync(pipe, _cancellation), _cancellation.Token);
+
+      Logger.Information("Language server initialization complete. Service is running.");
       await server.WaitForExit.ConfigureAwait(false);
 
       return ExitCodes.Success;
    }
 
-   /// <inheritdoc/>
-   public ValueTask DisposeAsync()
+   private async Task MonitorPipeConnectionInternalAsync(NamedPipeServerStream stream, CancellationTokenSource cancellation)
    {
-      throw new NotImplementedException();
+      try
+      {
+         while (stream.IsConnected && !cancellation.Token.IsCancellationRequested)
+         {
+            await Task.Delay(DefaultMonitorIntervalInternal, cancellation.Token);
+         }
+      }
+      catch (OperationCanceledException)
+      {
+         _ = Task.CompletedTask;
+      }
    }
 }

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.LanguageServer.Client;
+using Microsoft.VisualStudio.Threading;
 using Synapse.LSP.Client.Interfaces;
 
 namespace Synapse.LSP.Client.Services;
@@ -46,7 +47,7 @@ internal class LanguageServerLauncher : ILanguageServerLauncher
          UseShellExecute = false,
       };
 
-      _stream = new NamedPipeClientStream(".", _pipe, PipeDirection.InOut, PipeOptions.Asynchronous);
+      _stream = new NamedPipeClientStream(LanguageServerDefaults.PipeServerName, _pipe, PipeDirection.InOut, PipeOptions.Asynchronous);
 
       try
       {
@@ -57,7 +58,7 @@ internal class LanguageServerLauncher : ILanguageServerLauncher
 
          if (!_process.Start())
          {
-            throw new Exception("Failed to start LSP process.");
+            throw new Exception($"Failed to start LSP process: '{server}'. Check if the file is accessible and has execution permissions.");
          }
 
          await _stream.ConnectAsync(token);
@@ -74,13 +75,34 @@ internal class LanguageServerLauncher : ILanguageServerLauncher
    /// <inheritdoc/>
    public async ValueTask DisposeAsync()
    {
-      _stream?.Dispose();
-
-      if (_process != null && !_process.HasExited)
+      if (_stream != null)
       {
-         _process.Kill();
-         _process.WaitForExit();
-         _process.Dispose();
+         _stream.Dispose();
+         _stream = null;
+      }
+
+      if (_process != null)
+      {
+         try
+         {
+            if (!_process.HasExited)
+            {
+               _process.Kill();
+
+               using var cancel = new CancellationTokenSource(LanguageServerDefaults.ServerShutdownTimeout);
+               await _process.WaitForExitAsync(cancel.Token);
+            }
+         }
+         catch (Exception)
+         {
+            // TODO: Log unexpected errors during process termination (e.g., ex.Message)
+            _ = typeof(Exception);
+         }
+         finally
+         {
+            _process.Dispose();
+            _process = null;
+         }
       }
    }
 
@@ -91,7 +113,7 @@ internal class LanguageServerLauncher : ILanguageServerLauncher
 
       if (!File.Exists(executable))
       {
-         throw new FileNotFoundException($"LSP Server not found at: {executable}");
+         throw new FileNotFoundException($"Failed to start LSP server: executable not found at {executable}");
       }
 
       return executable;

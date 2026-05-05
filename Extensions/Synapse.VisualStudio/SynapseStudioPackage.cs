@@ -6,6 +6,9 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Synapse.VisualStudio;
 
+/// <summary>
+/// The main entry point for the Synapse Studio Visual Studio extension.
+/// </summary>
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 [ProvideAutoLoad(SynapseStudioPackage.PackageGuidString, PackageAutoLoadFlags.BackgroundLoad)]
 [ProvideUIContextRule(
@@ -17,6 +20,9 @@ namespace Synapse.VisualStudio;
 [Guid(SynapseStudioPackage.PackageGuidString)]
 public sealed class SynapseStudioPackage : AsyncPackage
 {
+   /// <summary>
+   /// SynapseStudioPackage GUID string.
+   /// </summary>
    public const string PackageGuidString = "a95da6ce-0d62-4578-904a-2949618bb070";
 
    /// <inheritdoc/>

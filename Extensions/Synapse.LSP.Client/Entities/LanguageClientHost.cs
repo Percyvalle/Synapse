@@ -84,14 +84,12 @@ public class LanguageClientHost : ILanguageClient
    }
 
    /// <inheritdoc/>
-   public Task<InitializationFailureContext> OnServerInitializeFailedAsync(ILanguageClientInitializationInfo initializationState)
+   public async Task<InitializationFailureContext?> OnServerInitializeFailedAsync(ILanguageClientInitializationInfo initializationState)
    {
-      var context = new InitializationFailureContext()
+      return new InitializationFailureContext()
       {
          FailureMessage = initializationState.StatusMessage,
       };
-
-      return Task.FromResult(context);
    }
 
    private async Task OnStopAsync(object? sender, EventArgs args)
