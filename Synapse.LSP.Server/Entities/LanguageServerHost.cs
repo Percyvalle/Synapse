@@ -37,14 +37,26 @@ public class LanguageServerHost : ILanguageServer
    /// <inheritdoc/>
    public async Task<int> RunAsync(CancellationToken token = default)
    {
+      using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _cancellation.Token);
       using var pipe = new NamedPipeServerStream(_configuration.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
       Logger.Information("Listening for transport connection: {PipeName}", _configuration.PipeName);
-      await pipe.WaitForConnectionAsync();
+      await pipe.WaitForConnectionAsync(linked.Token).ConfigureAwait(false);
 
       Logger.Information("Transport connection established. Initializing Language Server...");
+      var server = await InitializeServerAsync(pipe).ConfigureAwait(false);
 
-      var server = await LanguageServer.From(options =>
+      // NOTE: We initiate background monitoring of the pipe connection to ensure
+      // the server self-terminates if the host process (IDE) closes unexpectedly
+      // without sending a formal 'shutdown' request.
+      Logger.Information("Language server initialization complete. Service is running.");
+
+      return await WaitForShutdownAsync(server, pipe, linked.Token, token).ConfigureAwait(false);
+   }
+
+   private async Task<LanguageServer> InitializeServerAsync(NamedPipeServerStream pipe)
+   {
+      return await LanguageServer.From(options =>
          options
             .WithInput(pipe)
             .WithOutput(pipe)
@@ -56,30 +68,57 @@ public class LanguageServerHost : ILanguageServer
             .WithHandler<SynapseDocumentHandler>()
             .WithHandler<SynapseShutdownHandler>())
          .ConfigureAwait(false);
+   }
 
-      // NOTE: We initiate background monitoring of the pipe connection to ensure 
-      // the server self-terminates if the host process (IDE) closes unexpectedly 
-      // without sending a formal 'shutdown' request.
-      _ = Task.Run(() => MonitorPipeConnectionInternalAsync(pipe, _cancellation), _cancellation.Token);
+   private async Task<int> WaitForShutdownAsync(LanguageServer server, NamedPipeServerStream pipe, CancellationToken linkedToken, CancellationToken hostToken)
+   {
+      var monitor = Task.Run(() => MonitorPipeConnectionInternalAsync(pipe, linkedToken), CancellationToken.None);
 
-      Logger.Information("Language server initialization complete. Service is running.");
-      await server.WaitForExit.ConfigureAwait(false);
+      var completed = await Task.WhenAny(server.WaitForExit, monitor).ConfigureAwait(false);
+      if (completed == monitor && !hostToken.IsCancellationRequested)
+      {
+         Logger.Warning("The transport connection was closed unexpectedly. Stopping the language server.");
+      }
+
+      await _cancellation.CancelAsync().ConfigureAwait(false);
+
+      if (pipe.IsConnected)
+      {
+         await pipe.DisposeAsync().ConfigureAwait(false);
+      }
+
+      try
+      {
+         await server.WaitForExit.ConfigureAwait(false);
+      }
+      catch (Exception exception) when (exception is OperationCanceledException or ObjectDisposedException)
+      {
+         Logger.Debug(exception, "Language server shutdown completed after transport termination.");
+      }
+
+      await monitor.ConfigureAwait(false);
 
       return ExitCodes.Success;
    }
 
-   private async Task MonitorPipeConnectionInternalAsync(NamedPipeServerStream stream, CancellationTokenSource cancellation)
+   private async Task MonitorPipeConnectionInternalAsync(NamedPipeServerStream stream, CancellationToken token)
    {
       try
       {
-         while (stream.IsConnected && !cancellation.Token.IsCancellationRequested)
+         while (!token.IsCancellationRequested)
          {
-            await Task.Delay(DefaultMonitorIntervalInternal, cancellation.Token);
+            if (!stream.IsConnected)
+            {
+               await _cancellation.CancelAsync().ConfigureAwait(false);
+               return;
+            }
+
+            await Task.Delay(DefaultMonitorIntervalInternal, token);
          }
       }
       catch (OperationCanceledException)
       {
-         _ = Task.CompletedTask;
+         // Expected during normal shutdown.
       }
    }
 }
