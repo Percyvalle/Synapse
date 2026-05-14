@@ -46,9 +46,8 @@ public class EmbeddingsGenerator : IEmbeddingsGenerator, IDisposable
       using var inpid = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, ids.AsMemory(), shape); // Input Ids
       using var attnt = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, mask.AsMemory(), shape); // Attention Mask
 
-      var hidden = 768;
-      var oshape = new long[] { 1, ids.Length, hidden };
-      var buffer = new float[ids.Length * hidden];
+      var oshape = new long[] { 1, ids.Length, _hidden };
+      var buffer = new float[ids.Length * _hidden];
       using var outten = OrtValue.CreateTensorValueFromMemory(OrtMemoryInfo.DefaultInstance, buffer.AsMemory(), oshape);
 
       var options = new RunOptions
@@ -60,8 +59,8 @@ public class EmbeddingsGenerator : IEmbeddingsGenerator, IDisposable
       var outputs = new OrtValue[] { outten };
       var result = await _session.RunAsync(options, _input, inputs, _output, outputs);
 
-      var vector = new float[hidden];
-      buffer.AsSpan(0, hidden).CopyTo(vector);
+      var vector = new float[_hidden];
+      buffer.AsSpan(0, _hidden).CopyTo(vector);
       return vector;
    }
 

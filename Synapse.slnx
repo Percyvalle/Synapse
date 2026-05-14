@@ -9,6 +9,9 @@
   <Folder Name="/Properties/">
     <File Path=".editorconfig" />
   </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="Synapse.Engine.Tests/Synapse.Engine.Tests.csproj" Id="8c9f1be9-ab3b-4439-8838-aaa3b999874d" />
+  </Folder>
   <Project Path="Synapse.CLI.Abstractions/Synapse.CLI.Abstractions.csproj" Id="a08c03d2-2e69-4122-8c91-a6119eeed622" />
   <Project Path="Synapse.CLI/Synapse.CLI.csproj" Id="dc002892-a1a4-4c49-9103-1aefffec99e3" />
   <Project Path="Synapse.Common/Synapse.Common.csproj" Id="831afbfa-864e-441c-812f-3fecf27c464d" />
