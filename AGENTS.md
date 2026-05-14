@@ -10,6 +10,8 @@ Act as a Lead Software Engineer and Software Architect. Your primary goal is to 
 # Project Structure
 - `Synapse.Common`
   Store cross-cutting primitives, shared constants, and low-level utilities that are safe to reuse across multiple projects. Do not place feature-specific business logic here.
+- `Synapse.Engine`
+  Store the core analytical and generative mechanisms, including code analysis (e.g., Roslyn AST parsing), RAG vector store operations, and local AI model inference (embeddings and LLM execution). This is the heavy computational "motor" of the system. Keep this project strictly decoupled from LSP transport layers, CLI orchestration, and editor-specific UI.
 - `Synapse.CLI.Abstractions`
   Store contracts, attributes, and option interfaces required by the CLI layer. Keep this project free of execution logic and external infrastructure concerns.
 - `Synapse.CLI`

@@ -1,4 +1,5 @@
-﻿using System.IO.Pipes;
+﻿using System.Diagnostics;
+using System.IO.Pipes;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
 using Serilog;
@@ -16,7 +17,7 @@ namespace Synapse.LSP.Entities;
 /// </summary>
 public class LanguageServerHost : ILanguageServer
 {
-   private static readonly TimeSpan DefaultMonitorIntervalInternal = TimeSpan.FromSeconds(1);
+   private static readonly TimeSpan DefaultMonitorIntervalInternal = TimeSpan.FromMilliseconds(100);
 
    private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
 
@@ -38,20 +39,18 @@ public class LanguageServerHost : ILanguageServer
    public async Task<int> RunAsync(CancellationToken token = default)
    {
       using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _cancellation.Token);
-      using var pipe = new NamedPipeServerStream(_configuration.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+      using var stream = new NamedPipeServerStream(_configuration.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
 
       Logger.Information("Listening for transport connection: {PipeName}", _configuration.PipeName);
-      await pipe.WaitForConnectionAsync(linked.Token).ConfigureAwait(false);
+      await stream.WaitForConnectionAsync(linked.Token).ConfigureAwait(false);
 
       Logger.Information("Transport connection established. Initializing Language Server...");
-      var server = await InitializeServerAsync(pipe).ConfigureAwait(false);
+      var server = await InitializeServerAsync(stream).ConfigureAwait(false);
 
-      // NOTE: We initiate background monitoring of the pipe connection to ensure
-      // the server self-terminates if the host process (IDE) closes unexpectedly
-      // without sending a formal 'shutdown' request.
       Logger.Information("Language server initialization complete. Service is running.");
+      await WaitForShutdownAsync(server, stream, linked.Token, token).ConfigureAwait(false);
 
-      return await WaitForShutdownAsync(server, pipe, linked.Token, token).ConfigureAwait(false);
+      return ExitCodes.Success;
    }
 
    private async Task<LanguageServer> InitializeServerAsync(NamedPipeServerStream pipe)
@@ -70,21 +69,24 @@ public class LanguageServerHost : ILanguageServer
          .ConfigureAwait(false);
    }
 
-   private async Task<int> WaitForShutdownAsync(LanguageServer server, NamedPipeServerStream pipe, CancellationToken linkedToken, CancellationToken hostToken)
+   private async Task WaitForShutdownAsync(LanguageServer server, NamedPipeServerStream stream, CancellationToken linked, CancellationToken token)
    {
-      var monitor = Task.Run(() => MonitorPipeConnectionInternalAsync(pipe, linkedToken), CancellationToken.None);
+      // NOTE: We initiate background monitoring of the host process (IDE) to ensure
+      // the server self-terminates if the IDE crashes unexpectedly without sending a formal 'shutdown' request.
+      var monitor = Task.Run(() => MonitorHostProcessInternalAsync(server, linked), CancellationToken.None);
 
       var completed = await Task.WhenAny(server.WaitForExit, monitor).ConfigureAwait(false);
-      if (completed == monitor && !hostToken.IsCancellationRequested)
+      if (completed == monitor && !token.IsCancellationRequested)
       {
-         Logger.Warning("The transport connection was closed unexpectedly. Stopping the language server.");
+         server.ForcefulShutdown();
+         Logger.Warning("The host process was terminated unexpectedly. Stopping the language server.");
       }
 
       await _cancellation.CancelAsync().ConfigureAwait(false);
 
-      if (pipe.IsConnected)
+      if (stream.IsConnected)
       {
-         await pipe.DisposeAsync().ConfigureAwait(false);
+         await stream.DisposeAsync().ConfigureAwait(false);
       }
 
       try
@@ -97,23 +99,48 @@ public class LanguageServerHost : ILanguageServer
       }
 
       await monitor.ConfigureAwait(false);
-
-      return ExitCodes.Success;
    }
 
-   private async Task MonitorPipeConnectionInternalAsync(NamedPipeServerStream stream, CancellationToken token)
+   private async Task MonitorHostProcessInternalAsync(LanguageServer server, CancellationToken token)
    {
       try
       {
-         while (!token.IsCancellationRequested)
+         // Wait for the client to send the 'initialize' request and populate the ProcessId
+         while (server.ClientSettings?.ProcessId == null && !token.IsCancellationRequested)
          {
-            if (!stream.IsConnected)
+            await Task.Delay(DefaultMonitorIntervalInternal, token);
+         }
+
+         if (token.IsCancellationRequested || server.ClientSettings?.ProcessId == null)
+         {
+            return;
+         }
+
+         var processId = (int)server.ClientSettings.ProcessId.Value;
+         using (var process = Process.GetProcessById(processId))
+         {
+            await process.WaitForExitAsync(token).ConfigureAwait(false);
+
+            if (!token.IsCancellationRequested)
             {
                await _cancellation.CancelAsync().ConfigureAwait(false);
-               return;
             }
-
-            await Task.Delay(DefaultMonitorIntervalInternal, token);
+         }
+      }
+      catch (ArgumentException)
+      {
+         // The process with the specified ID has already exited.
+         if (!token.IsCancellationRequested)
+         {
+            await _cancellation.CancelAsync().ConfigureAwait(false);
+         }
+      }
+      catch (InvalidOperationException)
+      {
+         // The process has already exited or cannot be tracked.
+         if (!token.IsCancellationRequested)
+         {
+            await _cancellation.CancelAsync().ConfigureAwait(false);
          }
       }
       catch (OperationCanceledException)

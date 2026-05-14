@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Synapse.Common\Synapse.Common.csproj" />
+    <ProjectReference Include="..\Synapse.Engine\Synapse.Engine.csproj" />
     <ProjectReference Include="..\Synapse.LSP.Abstractions\Synapse.LSP.Abstractions.csproj" />
   </ItemGroup>
 

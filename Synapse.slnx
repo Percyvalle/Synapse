@@ -12,6 +12,7 @@
   <Project Path="Synapse.CLI.Abstractions/Synapse.CLI.Abstractions.csproj" Id="a08c03d2-2e69-4122-8c91-a6119eeed622" />
   <Project Path="Synapse.CLI/Synapse.CLI.csproj" Id="dc002892-a1a4-4c49-9103-1aefffec99e3" />
   <Project Path="Synapse.Common/Synapse.Common.csproj" Id="831afbfa-864e-441c-812f-3fecf27c464d" />
+  <Project Path="Synapse.Engine/Synapse.Engine.csproj" Id="fd778a6b-998d-4478-8a9b-33b2543e7419" />
   <Project Path="Synapse.LSP.Abstractions/Synapse.LSP.Abstractions.csproj" Id="71b1a15d-304f-4d67-8293-34b81b56e7a0" />
   <Project Path="Synapse.LSP.Server/Synapse.LSP.Server.csproj" />
 </Solution>

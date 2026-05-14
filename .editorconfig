@@ -25,6 +25,9 @@ dotnet_diagnostic.SA1204.severity = error
 # IDE0005 - Remove unnecessary using directives
 dotnet_diagnostic.IDE0005.severity = error
 
+# SA1010: Disable space before opening square bracket conflict
+dotnet_diagnostic.SA1010.severity = none
+
 # Prevent code-style breaks - upper-level editorconfig was not read for some reason
 [*]
 indent_size = 3
