@@ -1,9 +1,14 @@
 ﻿using System.Diagnostics;
 using System.IO.Pipes;
+using Build5Nines.SharpVector.Embeddings;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
 using Serilog;
 using Synapse.Common.Constants;
+using Synapse.Engine.Abstraction.Models;
+using Synapse.Engine.Embeddings;
+using Synapse.Engine.Persistence;
 using Synapse.LSP.Abstractions.Interfaces;
 using Synapse.LSP.Abstractions.Models;
 using Synapse.LSP.Handlers;
@@ -64,6 +69,24 @@ public class LanguageServerHost : ILanguageServer
                   .AddSerilog()
                   .AddLanguageProtocolLogging()
                   .SetMinimumLevel(LogLevel.Debug))
+            .WithServices(services =>
+            {
+               // TODO: [TEMPORARY] Hardcoded paths for local testing.
+               // Make sure to replace these with dynamic paths (e.g., AppContext.BaseDirectory) before release,
+               // otherwise the server won't be able to find the model on users' machines!
+               var model = @"C:\Users\goman\Desktop\Synapse\Synapse.Engine.Tests\Data\model_quint8_avx2.onnx";
+               var vocab = @"C:\Users\goman\Desktop\Synapse\Synapse.Engine.Tests\Data\tokenizer.json";
+
+               if (!File.Exists(model))
+               {
+                  return;
+               }
+
+               var generator = new EmbeddingsGenerator(model, vocab, 768);
+               services.AddSingleton<IEmbeddingsGenerator>(generator);
+               services.AddSingleton<VectorMetadataRepository<RoslynChunkMetadata>>();
+            })
+            .WithHandler<SynapseInitializedHandler>()
             .WithHandler<SynapseDocumentHandler>()
             .WithHandler<SynapseShutdownHandler>())
          .ConfigureAwait(false);

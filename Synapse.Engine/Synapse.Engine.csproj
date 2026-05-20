@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Build5Nines.SharpVector" Version="2.2.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
     <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.26.0" />
     <PackageReference Include="Tokenizers.DotNet" Version="1.4.1" />
     <PackageReference Include="Tokenizers.DotNet.runtime.win-x64" Version="1.4.1" />

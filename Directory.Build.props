@@ -9,9 +9,6 @@
       <BaseArtifactsPath>$(MSBuildThisFileDirectory)bin</BaseArtifactsPath>
       <OutputPath>$(BaseArtifactsPath)\$(Platform)\$(Configuration)\$(MSBuildProjectName)\</OutputPath>
       <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-
-      <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-      <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
    </PropertyGroup>
 
    <ItemGroup>
