@@ -12,6 +12,8 @@ Act as a Lead Software Engineer and Software Architect. Your primary goal is to 
   Store cross-cutting primitives, shared constants, and low-level utilities that are safe to reuse across multiple projects. Do not place feature-specific business logic here.
 - `Synapse.Engine`
   Store the core analytical and generative mechanisms, including code analysis (e.g., Roslyn AST parsing), RAG vector store operations, and local AI model inference (embeddings and LLM execution). This is the heavy computational "motor" of the system. Keep this project strictly decoupled from LSP transport layers, CLI orchestration, and editor-specific UI.
+- `Synapse.Engine.Abstraction`
+  Store all contracts, models, and shared data structures exposed by the Engine layer (e.g., Roslyn context models, chunk metadata, embedding interfaces). This project must remain free of implementation logic — it defines the shape of data and abstractions only. Other projects depend on it; it must not depend on them.
 - `Synapse.CLI.Abstractions`
   Store contracts, attributes, and option interfaces required by the CLI layer. Keep this project free of execution logic and external infrastructure concerns.
 - `Synapse.CLI`
@@ -26,6 +28,8 @@ Act as a Lead Software Engineer and Software Architect. Your primary goal is to 
   Store Visual Studio extension package registration, VSIX configuration, IDE integration points, and extension startup wiring. Keep protocol and server implementation details out of this project.
 - `Extensions`
   Store IDE-specific or host-specific integrations only. Shared platform-agnostic logic must be moved into a dedicated core project instead of being duplicated across extensions.
+- `Synapse.Engine.Tests`
+  Store unit and integration tests for the Engine layer. Tests here must not depend on LSP, CLI, or extension projects. Use xUnit as the test framework. Keep test helper methods and shared fixtures within this project.
 
 # Placement Rules
 - Place each type, service, handler, model, and abstraction in the project that matches its primary responsibility.
