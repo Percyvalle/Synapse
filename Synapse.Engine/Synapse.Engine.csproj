@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Synapse.Engine.Abstraction\Synapse.Engine.Abstraction.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Synapse.Engine.Tests" />
+  </ItemGroup>
+
 </Project>

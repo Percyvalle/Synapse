@@ -20,7 +20,7 @@ public class EmbeddingModelsFixture
 
    /// <summary>
    /// Gets the absolute file path to the 768-dimensional quantized ONNX model.
-   /// </summary
+   /// </summary>
    public string Model768Path { get; }
 
    /// <summary>
