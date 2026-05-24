@@ -8,8 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.CoreUtility" Version="17.14.275" />
     <PackageReference Include="Microsoft.VisualStudio.LanguageServer.Client" Version="17.14.60" />
     <PackageReference Include="Microsoft.VisualStudio.Shell.Framework" Version="17.14.40264" />
+    <PackageReference Include="Microsoft.VisualStudio.Text.Logic" Version="17.14.249" />
   </ItemGroup>
 
 </Project>
