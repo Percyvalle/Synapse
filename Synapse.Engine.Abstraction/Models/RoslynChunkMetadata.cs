@@ -20,13 +20,13 @@ public class RoslynChunkMetadata
    public string Code { get; init; } = string.Empty;
 
    /// <summary>
-   /// Gets the starting line number (1-based) of the code chunk in the original source file.
+   /// Gets the starting line number (zero-based) of the code chunk in the original source file.
    /// Used by the LSP client to determine exactly where to place visual markers.
    /// </summary>
    public int StartLine { get; init; }
 
    /// <summary>
-   /// Gets the ending line number (1-based) of the code chunk in the original source file.
+   /// Gets the ending line number (zero-based) of the code chunk in the original source file.
    /// Used by the LSP client to determine the end range of visual markers.
    /// </summary>
    public int EndLine { get; init; }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace Synapse.Engine.Abstraction.Extensions;
+namespace Synapse.Engine.Extensions;
 
 /// <summary>
 /// Provides extension methods for extracting source location information from syntax nodes.

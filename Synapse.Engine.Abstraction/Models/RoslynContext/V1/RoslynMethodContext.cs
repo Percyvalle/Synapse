@@ -18,17 +18,17 @@ public class RoslynMethodContext
    /// <summary>
    /// Gets or sets the list of modifiers applied to the method (e.g., "public", "static", "async").
    /// </summary>
-   public List<string> Modifiers { get; set; } = new List<string>();
+   public IReadOnlyList<string> Modifiers { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the list of attributes decorating the method (e.g., "[HttpGet]", "[Obsolete]").
    /// </summary>
-   public List<string> Attributes { get; set; } = new List<string>();
+   public IReadOnlyList<string> Attributes { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the list of parameters defined in the method signature.
    /// </summary>
-   public List<RoslynParameterContext> Parameters { get; set; } = new List<RoslynParameterContext>();
+   public IReadOnlyList<RoslynParameterContext> Parameters { get; set; } = new List<RoslynParameterContext>();
 
    /// <summary>
    /// Gets or sets the line number in the source file where the method declaration begins.

@@ -28,7 +28,7 @@ internal class CommandLineBuilder
    /// </summary>
    /// <param name="instance">The application command implementation to register.</param>
    /// <returns>The current <see cref="CommandLineBuilder"/> instance for fluent chaining.</returns>
-   public CommandLineBuilder RegistryCommand(IApplicationCommand instance)
+   public CommandLineBuilder RegisterCommand(IApplicationCommand instance)
    {
       _root.Subcommands.Add(instance.Build());
       return this;

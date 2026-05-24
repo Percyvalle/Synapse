@@ -18,12 +18,12 @@ public class RoslynMemberContext
    /// <summary>
    /// Gets or sets the list of modifiers applied to the member (e.g., "public", "static", "readonly").
    /// </summary>
-   public List<string> Modifiers { get; set; } = new List<string>();
+   public IReadOnlyList<string> Modifiers { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the list of attributes decorating the member (e.g., "[Obsolete]", "[Required]").
    /// </summary>
-   public List<string> Attributes { get; set; } = new List<string>();
+   public IReadOnlyList<string> Attributes { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the line number in the source file where the member declaration begins.

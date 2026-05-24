@@ -18,17 +18,17 @@ public class RoslynClassContext
    /// <summary>
    /// Gets or sets the list of modifiers applied to the class (e.g., "public", "abstract", "sealed").
    /// </summary>
-   public List<string> Modifiers { get; set; } = new List<string>();
+   public IReadOnlyList<string> Modifiers { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the list of base types the class inherits from or implements (e.g., base class or interfaces).
    /// </summary>
-   public List<string> BaseTypes { get; set; } = new List<string>();
+   public IReadOnlyList<string> BaseTypes { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the list of attributes decorating the class (e.g., "[Serializable]", "[ApiController]").
    /// </summary>
-   public List<string> Attributes { get; set; } = new List<string>();
+   public IReadOnlyList<string> Attributes { get; set; } = new List<string>();
 
    /// <summary>
    /// Gets or sets the list of fields declared in the class.

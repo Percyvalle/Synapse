@@ -4,7 +4,7 @@ using Synapse.CLI.Entities;
 using Synapse.Common;
 using Synapse.Common.Constants;
 
-namespace Synapse.LSP;
+namespace Synapse.CLI;
 
 /// <summary>
 /// Static class that serves as the container for the application's entry point.
@@ -28,7 +28,7 @@ public static class EntryPoint
       {
          var context = new CommandLineBuilder(ApplicationConstants.RootCommandDescription);
          return await context
-            .RegistryCommand(new StartCommand())
+            .RegisterCommand(new StartCommand())
             .InvokeAsync(args);
       }
       catch (Exception exception)

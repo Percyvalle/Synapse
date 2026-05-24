@@ -1,5 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 
+namespace Synapse.Engine.Extensions;
+
 /// <summary>
 /// Provides extension methods for working with syntax token lists.
 /// </summary>

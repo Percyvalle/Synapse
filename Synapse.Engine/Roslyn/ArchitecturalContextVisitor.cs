@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Synapse.Engine.Abstraction.Extensions;
 using Synapse.Engine.Abstraction.Models.RoslynContext.V1;
 using Synapse.Engine.Extensions;
 

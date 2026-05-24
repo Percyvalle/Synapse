@@ -1,5 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+namespace Synapse.Engine.Extensions;
+
 /// <summary>
 /// Provides extension methods for working with base list syntax nodes.
 /// </summary>

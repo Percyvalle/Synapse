@@ -1,5 +1,8 @@
 ﻿namespace Synapse.CLI.Abstractions.Interfaces;
 
+/// <summary>
+/// Marker interface for all application commands.
+/// </summary>
 public interface IApplicationCommand
 {
 }

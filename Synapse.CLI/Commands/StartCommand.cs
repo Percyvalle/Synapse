@@ -6,7 +6,7 @@ using Synapse.CLI.Commands.Options;
 using Synapse.Common.Constants;
 using Synapse.LSP.Abstractions.Interfaces;
 using Synapse.LSP.Abstractions.Models;
-using Synapse.LSP.Entities;
+using Synapse.LSP.Server.Entities;
 
 namespace Synapse.CLI.Commands;
 

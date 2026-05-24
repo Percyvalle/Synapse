@@ -15,14 +15,14 @@ using Synapse.LSP.Handlers;
 using Synapse.LSP.Server.Handlers;
 using ILogger = Serilog.ILogger;
 
-namespace Synapse.LSP.Entities;
+namespace Synapse.LSP.Server.Entities;
 
 /// <summary>
 /// Orchestrates the Language Server Protocol (LSP) lifecycle and request handling.
 /// </summary>
 public class LanguageServerHost : ILanguageServer
 {
-   private static readonly TimeSpan DefaultMonitorIntervalInternal = TimeSpan.FromMilliseconds(100);
+   private static readonly TimeSpan DefaultMonitorInterval = TimeSpan.FromMilliseconds(100);
 
    private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
 
@@ -131,7 +131,7 @@ public class LanguageServerHost : ILanguageServer
          // Wait for the client to send the 'initialize' request and populate the ProcessId
          while (server.ClientSettings?.ProcessId == null && !token.IsCancellationRequested)
          {
-            await Task.Delay(DefaultMonitorIntervalInternal, token);
+            await Task.Delay(DefaultMonitorInterval, token);
          }
 
          if (token.IsCancellationRequested || server.ClientSettings?.ProcessId == null)

@@ -12,8 +12,6 @@ public class EmbeddingModelsFixture
    /// </summary>
    public EmbeddingModelsFixture()
    {
-      var baseDir = AppContext.BaseDirectory;
-
       Model768Path = Path.Combine(AppContext.BaseDirectory, "Data", "model_quint8_avx2.onnx");
       Vocab768Path = Path.Combine(AppContext.BaseDirectory, "Data", "tokenizer.json");
    }
