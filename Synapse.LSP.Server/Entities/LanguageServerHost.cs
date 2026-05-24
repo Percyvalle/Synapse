@@ -1,19 +1,18 @@
 ﻿using System.Diagnostics;
-using System.IO.Pipes;
+using System.Reactive;
 using Build5Nines.SharpVector.Embeddings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using OmniSharp.Extensions.LanguageServer.Server;
+using OmniSharp.Utilities;
 using Serilog;
 using Synapse.Common.Constants;
 using Synapse.Engine.Abstraction.Models;
 using Synapse.Engine.Embeddings;
 using Synapse.Engine.Persistence;
 using Synapse.LSP.Abstractions.Interfaces;
-using Synapse.LSP.Abstractions.Models;
 using Synapse.LSP.Handlers;
 using Synapse.LSP.Server.Handlers;
-using ILogger = Serilog.ILogger;
 
 namespace Synapse.LSP.Server.Entities;
 
@@ -24,151 +23,86 @@ public class LanguageServerHost : ILanguageServer
 {
    private static readonly TimeSpan DefaultMonitorInterval = TimeSpan.FromMilliseconds(100);
 
-   private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
-
-   private readonly LanguageServerConfiguration _configuration;
+   private readonly LanguageServerOptions _options;
+   private readonly CancellationTokenSource _cancellation;
 
    /// <summary>
    /// Initializes a new instance of the <see cref="LanguageServerHost"/> class.
    /// </summary>
-   /// <param name="configuration">The configuration settings used to initialize the server.</param>
-   /// <exception cref="ArgumentNullException">Thrown when <paramref name="configuration"/> is null.</exception>
-   public LanguageServerHost(LanguageServerConfiguration configuration)
+   /// <param name="input">Input Stream.</param>
+   /// <param name="output">Output Stream.</param>
+   /// <param name="cancellation">Cancellation Token Source.</param>
+   public LanguageServerHost(Stream input, Stream output, CancellationTokenSource cancellation)
    {
-      _configuration = configuration;
+      _options = new LanguageServerOptions()
+         .WithInput(input)
+         .WithOutput(output)
+         .ConfigureLogging(
+            builder => builder
+               .AddSerilog()
+               .AddLanguageProtocolLogging()
+               .SetMinimumLevel(LogLevel.Debug))
+         .WithServices(services =>
+         {
+            // TODO: [TEMPORARY] Hardcoded paths for local testing.
+            // Make sure to replace these with dynamic paths (e.g., AppContext.BaseDirectory) before release,
+            // otherwise the server won't be able to find the model on users' machines!
+            var model = @"C:\Users\goman\Desktop\Synapse\Synapse.Engine.Tests\Data\model_quint8_avx2.onnx";
+            var vocab = @"C:\Users\goman\Desktop\Synapse\Synapse.Engine.Tests\Data\tokenizer.json";
+
+            if (!File.Exists(model))
+            {
+               return;
+            }
+
+            var generator = new EmbeddingsGenerator(model, vocab, 768);
+            services.AddSingleton<IEmbeddingsGenerator>(generator);
+            services.AddSingleton<VectorMetadataRepository<RoslynChunkMetadata>>();
+         })
+
+         .WithHandler<SynapseDocumentHandler>()
+         .WithHandler<SynapseShutdownHandler>();
+
+      _cancellation = cancellation;
    }
 
-   private ILogger Logger { get; } = Log.ForContext<LanguageServerHost>();
+   private LanguageServer Server { get; set; } = null!;
 
    /// <inheritdoc/>
-   public async Task<int> RunAsync(CancellationToken token = default)
+   public async Task<int> RunAsync()
    {
-      using var linked = CancellationTokenSource.CreateLinkedTokenSource(token, _cancellation.Token);
-      using var stream = new NamedPipeServerStream(_configuration.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+      Server = await LanguageServer.From(_options);
+      Server.Exit.Subscribe(Observer.Create<int>(i => Cancel()));
 
-      Logger.Information("Listening for transport connection: {PipeName}", _configuration.PipeName);
-      await stream.WaitForConnectionAsync(linked.Token).ConfigureAwait(false);
+      if (Server.ClientSettings?.ProcessId != null &&
+          Server.ClientSettings.ProcessId != -1)
+      {
+         try
+         {
+            var id = (int)Server.ClientSettings.ProcessId.Value;
+            var process = Process.GetProcessById(id);
+            process.EnableRaisingEvents = true;
+            process.OnExit(Cancel);
+         }
+         catch (Exception ex)
+         {
+            // If the process dies before we get here then request shutdown immediately
+            Cancel();
+         }
+      }
 
-      Logger.Information("Transport connection established. Initializing Language Server...");
-      var server = await InitializeServerAsync(stream).ConfigureAwait(false);
-
-      Logger.Information("Language server initialization complete. Service is running.");
-      await WaitForShutdownAsync(server, stream, linked.Token, token).ConfigureAwait(false);
-
+      await Server.WaitForExit.WaitAsync(_cancellation.Token);
       return ExitCodes.Success;
    }
 
-   private async Task<LanguageServer> InitializeServerAsync(NamedPipeServerStream pipe)
-   {
-      return await LanguageServer.From(options =>
-         options
-            .WithInput(pipe)
-            .WithOutput(pipe)
-            .ConfigureLogging(
-               builder => builder
-                  .AddSerilog()
-                  .AddLanguageProtocolLogging()
-                  .SetMinimumLevel(LogLevel.Debug))
-            .WithServices(services =>
-            {
-               // TODO: [TEMPORARY] Hardcoded paths for local testing.
-               // Make sure to replace these with dynamic paths (e.g., AppContext.BaseDirectory) before release,
-               // otherwise the server won't be able to find the model on users' machines!
-               var model = @"C:\Users\goman\Desktop\Synapse\Synapse.Engine.Tests\Data\model_quint8_avx2.onnx";
-               var vocab = @"C:\Users\goman\Desktop\Synapse\Synapse.Engine.Tests\Data\tokenizer.json";
-
-               if (!File.Exists(model))
-               {
-                  return;
-               }
-
-               var generator = new EmbeddingsGenerator(model, vocab, 768);
-               services.AddSingleton<IEmbeddingsGenerator>(generator);
-               services.AddSingleton<VectorMetadataRepository<RoslynChunkMetadata>>();
-            })
-            .WithHandler<SynapseInitializedHandler>()
-            .WithHandler<SynapseDocumentHandler>()
-            .WithHandler<SynapseShutdownHandler>())
-         .ConfigureAwait(false);
-   }
-
-   private async Task WaitForShutdownAsync(LanguageServer server, NamedPipeServerStream stream, CancellationToken linked, CancellationToken token)
-   {
-      // NOTE: We initiate background monitoring of the host process (IDE) to ensure
-      // the server self-terminates if the IDE crashes unexpectedly without sending a formal 'shutdown' request.
-      var monitor = Task.Run(() => MonitorHostProcessInternalAsync(server, linked), CancellationToken.None);
-
-      var completed = await Task.WhenAny(server.WaitForExit, monitor).ConfigureAwait(false);
-      if (completed == monitor && !token.IsCancellationRequested)
-      {
-         server.ForcefulShutdown();
-         Logger.Warning("The host process was terminated unexpectedly. Stopping the language server.");
-      }
-
-      await _cancellation.CancelAsync().ConfigureAwait(false);
-
-      if (stream.IsConnected)
-      {
-         await stream.DisposeAsync().ConfigureAwait(false);
-      }
-
-      try
-      {
-         await server.WaitForExit.ConfigureAwait(false);
-      }
-      catch (Exception exception) when (exception is OperationCanceledException or ObjectDisposedException)
-      {
-         Logger.Debug(exception, "Language server shutdown completed after transport termination.");
-      }
-
-      await monitor.ConfigureAwait(false);
-   }
-
-   private async Task MonitorHostProcessInternalAsync(LanguageServer server, CancellationToken token)
+   private void Cancel()
    {
       try
       {
-         // Wait for the client to send the 'initialize' request and populate the ProcessId
-         while (server.ClientSettings?.ProcessId == null && !token.IsCancellationRequested)
-         {
-            await Task.Delay(DefaultMonitorInterval, token);
-         }
-
-         if (token.IsCancellationRequested || server.ClientSettings?.ProcessId == null)
-         {
-            return;
-         }
-
-         var processId = (int)server.ClientSettings.ProcessId.Value;
-         using (var process = Process.GetProcessById(processId))
-         {
-            await process.WaitForExitAsync(token).ConfigureAwait(false);
-
-            if (!token.IsCancellationRequested)
-            {
-               await _cancellation.CancelAsync().ConfigureAwait(false);
-            }
-         }
+         _cancellation.Cancel();
       }
-      catch (ArgumentException)
+      catch (ObjectDisposedException)
       {
-         // The process with the specified ID has already exited.
-         if (!token.IsCancellationRequested)
-         {
-            await _cancellation.CancelAsync().ConfigureAwait(false);
-         }
-      }
-      catch (InvalidOperationException)
-      {
-         // The process has already exited or cannot be tracked.
-         if (!token.IsCancellationRequested)
-         {
-            await _cancellation.CancelAsync().ConfigureAwait(false);
-         }
-      }
-      catch (OperationCanceledException)
-      {
-         // Expected during normal shutdown.
       }
    }
 }
