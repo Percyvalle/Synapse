@@ -39,4 +39,9 @@ public class RoslynMethodContext
    /// Gets or sets the line number in the source file where the method declaration ends.
    /// </summary>
    public int EndLine { get; set; }
+
+   /// <summary>
+   /// Gets or sets the behavioral context extracted from the method body. Null for abstract or interface methods.
+   /// </summary>
+   public RoslynMethodBodyContext? Body { get; set; }
 }

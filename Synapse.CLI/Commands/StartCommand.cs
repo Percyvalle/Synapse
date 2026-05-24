@@ -28,13 +28,6 @@ internal class StartCommand : IExecutableCommand<StartCommandOptions>
 
       try
       {
-         while (!Debugger.IsAttached)
-         {
-            await Task.Delay(100);
-         }
-
-         Debugger.Break();
-
          using var cancel = CancellationTokenSource.CreateLinkedTokenSource(token);
          using var stream = new NamedPipeServerStream(options.PipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
          await stream.WaitForConnectionAsync(cancel.Token);

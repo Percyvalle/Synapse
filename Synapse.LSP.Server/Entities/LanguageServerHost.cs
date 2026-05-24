@@ -21,8 +21,6 @@ namespace Synapse.LSP.Server.Entities;
 /// </summary>
 public class LanguageServerHost : ILanguageServer
 {
-   private static readonly TimeSpan DefaultMonitorInterval = TimeSpan.FromMilliseconds(100);
-
    private readonly LanguageServerOptions _options;
    private readonly CancellationTokenSource _cancellation;
 
@@ -59,7 +57,6 @@ public class LanguageServerHost : ILanguageServer
             services.AddSingleton<IEmbeddingsGenerator>(generator);
             services.AddSingleton<VectorMetadataRepository<RoslynChunkMetadata>>();
          })
-
          .WithHandler<SynapseDocumentHandler>()
          .WithHandler<SynapseShutdownHandler>();
 

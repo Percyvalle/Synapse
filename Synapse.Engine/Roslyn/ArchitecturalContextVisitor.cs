@@ -108,6 +108,19 @@ internal class ArchitecturalContextVisitor : CSharpSyntaxWalker
          EndLine = node.ExtractEndLine(),
       };
 
+      if (node.Body != null)
+      {
+         var visitor = new MethodContextVisitor();
+         visitor.Visit(node.Body);
+         context.Body = visitor.Build();
+      }
+      else if (node.ExpressionBody != null)
+      {
+         var visitor = new MethodContextVisitor();
+         visitor.Visit(node.ExpressionBody);
+         context.Body = visitor.Build();
+      }
+
       _stack.Peek().Methods.Add(context);
 
       base.VisitMethodDeclaration(node);

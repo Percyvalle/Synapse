@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 
 namespace Synapse.Engine.Extensions;
 
@@ -22,4 +22,12 @@ internal static class SyntaxNodeExtensions
    /// <returns>The zero-based line number where the node ends.</returns>
    public static int ExtractEndLine(this SyntaxNode node) =>
       node.GetLocation().GetLineSpan().EndLinePosition.Line;
+
+   /// <summary>
+   /// Extracts the zero-based starting column number of the syntax node in its source file.
+   /// </summary>
+   /// <param name="node">The syntax node to extract the start column from.</param>
+   /// <returns>The zero-based column number where the node begins.</returns>
+   public static int ExtractStartColumn(this SyntaxNode node) =>
+      node.GetLocation().GetLineSpan().StartLinePosition.Character;
 }
